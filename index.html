@@ -27,6 +27,7 @@
               'fade-in': 'fadeIn 0.8s ease-out forwards',
               'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
               'slide-up-delay': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards',
+              'breathe': 'breathe 8s infinite ease-in-out',
             },
             keyframes: {
               blob: {
@@ -42,6 +43,10 @@
               slideUp: {
                 '0%': { opacity: '0', transform: 'translateY(40px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              breathe: {
+                '0%, 100%': { transform: 'scale(1)', opacity: '0.8' },
+                '50%': { transform: 'scale(1.5)', opacity: '0.4' },
               }
             }
           }

@@ -3,13 +3,13 @@ import {
   Home, MessageSquare, ShieldAlert, HeartHandshake, Settings, LogOut,
   ChevronRight, TrendingUp, Clock, Menu, X, Sparkles, Droplets, Zap,
   ArrowRight, Calendar, CheckCircle2, Flame, Cigarette, Wine, Pill, Syringe,
-  Skull, Baby, Search, Quote, Users, Leaf
+  Skull, Baby, Search, Quote, Users, Leaf, Wind, Award, Medal, Crown, Star
 } from 'lucide-react';
 import { UserProfile, AddictionType, QuitSpeed, UrgeLog, ChatMessage } from './types';
 import { Button, Input, Select, Card, StatCard } from './components/UI';
 import { streamChatResponse, generateDailyQuote, getSmartAlternatives } from './services/geminiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { format, differenceInDays, differenceInHours, startOfWeek, addDays, parseISO } from 'date-fns';
+import { format, differenceInDays, differenceInHours, subDays, addDays, parseISO } from 'date-fns';
 
 // --- Landing Page Component ---
 const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
@@ -304,7 +304,7 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
 export default function App() {
   const [showLanding, setShowLanding] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [view, setView] = useState<'dashboard' | 'chat' | 'urges' | 'alternatives' | 'settings'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'chat' | 'urges' | 'alternatives' | 'settings' | 'breathe'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dailyQuote, setDailyQuote] = useState<string>('');
   const [urges, setUrges] = useState<UrgeLog[]>([]);
@@ -315,8 +315,6 @@ export default function App() {
     const savedUrges = localStorage.getItem('eoa_urges');
     if (savedUser) {
        setUser(JSON.parse(savedUser));
-       // If user exists, we can opt to skip landing or show it briefly. 
-       // For this update, we show landing but user can click through.
     }
     if (savedUrges) setUrges(JSON.parse(savedUrges));
   }, []);
@@ -415,6 +413,7 @@ export default function App() {
           <SidebarItem id="urges" icon={<TrendingUp size={20} />} label="Urge Tracker" colorClass="bg-gradient-to-r from-mauvelous to-[#D17585] shadow-mauvelous/30" />
           <SidebarItem id="chat" icon={<MessageSquare size={20} />} label="AI Companion" colorClass="bg-gradient-to-r from-lilacfizz to-[#B089AD] shadow-lilacfizz/30" />
           <SidebarItem id="alternatives" icon={<HeartHandshake size={20} />} label="Strategies" colorClass="bg-gradient-to-r from-polarsky to-denim shadow-polarsky/30" />
+          <SidebarItem id="breathe" icon={<Wind size={20} />} label="Breathing Space" colorClass="bg-gradient-to-r from-green-400 to-emerald-500 shadow-green-400/30" />
           <SidebarItem id="settings" icon={<Settings size={20} />} label="Settings" colorClass="bg-gray-800" />
         </nav>
 
@@ -450,6 +449,7 @@ export default function App() {
                 {view === 'urges' && <span className="text-mauvelous">Urge Monitor</span>}
                 {view === 'chat' && <span className="text-lilacfizz">Soul Companion</span>}
                 {view === 'alternatives' && <span className="text-denim">Coping Strategies</span>}
+                {view === 'breathe' && <span className="text-green-500">Breathing Space</span>}
                 {view === 'settings' && "Preferences"}
               </h2>
               <p className="text-gray-500 font-medium text-lg ml-1">
@@ -457,6 +457,7 @@ export default function App() {
                 {view === 'urges' && "Track patterns to break them."}
                 {view === 'chat' && "Vent, ask, and heal with AI."}
                 {view === 'alternatives' && "Rewire your brain with new habits."}
+                {view === 'breathe' && "Find your calm in the chaos."}
                 {view === 'settings' && "Manage your account."}
               </p>
             </div>
@@ -474,6 +475,9 @@ export default function App() {
               )}
               {view === 'alternatives' && (
                 <AlternativesView user={user} />
+              )}
+              {view === 'breathe' && (
+                 <BreathingView />
               )}
               {view === 'settings' && (
                 <div className="bg-white/70 backdrop-blur-xl p-10 rounded-[2.5rem] border border-white shadow-xl shadow-gray-200/50 max-w-3xl">
@@ -528,11 +532,15 @@ const DashboardView = ({ user, dailyQuote, urges }: { user: UserProfile, dailyQu
   const daysSober = differenceInDays(now, startDate);
   const hoursSober = differenceInHours(now, startDate) % 24;
 
+  // Chart data: Last 7 Days rolling window
   const chartData = useMemo(() => {
+     const end = new Date();
+     // Create an array of the last 7 days including today
      const days = Array.from({length: 7}, (_, i) => {
-        const d = addDays(startOfWeek(new Date()), i);
+        const d = subDays(end, 6 - i); // Start from 6 days ago up to today
         return { name: format(d, 'EEE'), date: format(d, 'yyyy-MM-dd'), count: 0 };
      });
+
      urges.forEach(u => {
         const dStr = format(parseISO(u.timestamp), 'yyyy-MM-dd');
         const day = days.find(d => d.date === dStr);
@@ -540,6 +548,14 @@ const DashboardView = ({ user, dailyQuote, urges }: { user: UserProfile, dailyQu
      });
      return days;
   }, [urges]);
+
+  // Milestone Badges Logic
+  const badges = [
+     { days: 1, label: '24 Hours', icon: <Clock size={24} />, color: 'bg-denim' },
+     { days: 3, label: '3 Days', icon: <CheckCircle2 size={24} />, color: 'bg-polarsky' },
+     { days: 7, label: '1 Week', icon: <TrophyBadge size={24} />, color: 'bg-lilacfizz' },
+     { days: 30, label: '1 Month', icon: <Crown size={24} />, color: 'bg-mauvelous' },
+  ];
 
   return (
     <div className="space-y-8">
@@ -582,46 +598,103 @@ const DashboardView = ({ user, dailyQuote, urges }: { user: UserProfile, dailyQu
         />
       </div>
 
-      {/* Chart */}
-      <Card title="Weekly Resilience" className="h-[28rem] shadow-xl border-white/60">
-         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-               <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fill: '#92A1C3', fontSize: 13, fontWeight: 700}} 
-                  dy={15}
-               />
-               <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fill: '#92A1C3', fontSize: 13, fontWeight: 600}} 
-                  allowDecimals={false} 
-               />
-               <Tooltip 
-                  cursor={{fill: '#F3F4F6', radius: 10}} 
-                  contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '20px', 
-                    border: '1px solid #fff', 
-                    boxShadow: '0 20px 40px -10px rgba(146, 161, 195, 0.3)',
-                    padding: '16px'
-                  }} 
-                  itemStyle={{color: '#92A1C3', fontWeight: 700}}
-               />
-               <Bar dataKey="count" radius={[12, 12, 12, 12]} barSize={48}>
-                 {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#92A1C3' : '#BED1E3'} />
-                 ))}
-               </Bar>
-            </BarChart>
-         </ResponsiveContainer>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Chart */}
+          <Card title="Last 7 Days Resilience" className="h-[24rem] shadow-xl border-white/60">
+             <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                   <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: '#92A1C3', fontSize: 13, fontWeight: 700}} 
+                      dy={15}
+                   />
+                   <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: '#92A1C3', fontSize: 13, fontWeight: 600}} 
+                      allowDecimals={false} 
+                   />
+                   <Tooltip 
+                      cursor={{fill: '#F3F4F6', radius: 10}} 
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: '20px', 
+                        border: '1px solid #fff', 
+                        boxShadow: '0 20px 40px -10px rgba(146, 161, 195, 0.3)',
+                        padding: '16px'
+                      }} 
+                      itemStyle={{color: '#92A1C3', fontWeight: 700}}
+                      labelStyle={{color: '#6A7B9F', fontWeight: 800, marginBottom: '0.5rem'}}
+                   />
+                   <Bar dataKey="count" radius={[12, 12, 12, 12]} barSize={32}>
+                     {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.count > 0 ? '#F3A0AD' : '#BED1E3'} />
+                     ))}
+                   </Bar>
+                </BarChart>
+             </ResponsiveContainer>
+          </Card>
+
+          {/* Badges Section */}
+          <Card title="Milestones Unlocked" className="h-[24rem] overflow-y-auto shadow-xl border-white/60">
+             <div className="grid grid-cols-2 gap-4">
+               {badges.map((badge, idx) => {
+                 const isUnlocked = daysSober >= badge.days;
+                 return (
+                   <div key={idx} className={`p-4 rounded-[2rem] border transition-all duration-300 flex flex-col items-center justify-center text-center gap-2 ${
+                     isUnlocked 
+                       ? `bg-white shadow-lg ${badge.color.replace('bg-', 'shadow-')}/20 border-white`
+                       : 'bg-gray-50 border-gray-100 opacity-50 grayscale'
+                   }`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-inner mb-1 ${isUnlocked ? badge.color : 'bg-gray-300'}`}>
+                         {badge.icon}
+                      </div>
+                      <span className="font-bold text-gray-800">{badge.label}</span>
+                      <span className={`text-[10px] font-extrabold uppercase tracking-widest px-2 py-1 rounded-full ${
+                        isUnlocked ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'
+                      }`}>
+                        {isUnlocked ? 'Unlocked' : 'Locked'}
+                      </span>
+                   </div>
+                 )
+               })}
+             </div>
+          </Card>
+      </div>
     </div>
   );
+};
+
+// Icon helper
+const TrophyBadge = ({size}: {size: number}) => <Medal size={size} />;
+
+const BreathingView = () => {
+   return (
+      <div className="flex flex-col items-center justify-center h-full relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-white to-green-50 shadow-2xl border border-white">
+         <div className="absolute top-10 left-0 w-full text-center z-10">
+            <h3 className="text-3xl font-black text-gray-800 mb-2">Box Breathing</h3>
+            <p className="text-gray-500 font-medium">Follow the rhythm to reduce anxiety.</p>
+         </div>
+
+         {/* Breathing Circle */}
+         <div className="relative flex items-center justify-center">
+            <div className="w-64 h-64 bg-green-200/30 rounded-full animate-breathe absolute mix-blend-multiply blur-xl"></div>
+            <div className="w-64 h-64 bg-blue-200/30 rounded-full animate-breathe absolute mix-blend-multiply blur-xl animation-delay-200"></div>
+            
+            <div className="relative z-10 w-48 h-48 bg-white/50 backdrop-blur-sm rounded-full border border-white shadow-2xl flex items-center justify-center animate-breathe">
+               <span className="text-green-600 font-black text-lg tracking-widest uppercase">Breathe</span>
+            </div>
+         </div>
+
+         <div className="absolute bottom-10 z-10 bg-white/60 backdrop-blur-md px-8 py-4 rounded-2xl border border-white shadow-sm">
+            <p className="text-denim-dark font-bold text-center">4s In • 4s Hold • 4s Out</p>
+         </div>
+      </div>
+   );
 };
 
 const UrgesView = ({ urges, onLogUrge }: { urges: UrgeLog[], onLogUrge: (u: UrgeLog) => void }) => {
