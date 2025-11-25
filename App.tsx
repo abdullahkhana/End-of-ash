@@ -56,12 +56,19 @@ const format = (date: Date, formatStr: string) => {
 // --- Music Player Component ---
 const BackgroundMusic = ({ isPlaying, setIsPlaying }: { isPlaying: boolean, setIsPlaying: (v: boolean) => void }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [error, setError] = useState(false);
   
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = 0.2; // Low volume by default
+      audioRef.current.volume = 0.5; // Increased volume for better audibility
       if (isPlaying) {
-        audioRef.current.play().catch(e => console.log("Auto-play blocked", e));
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.error("Auto-play blocked or failed:", err);
+            // We do not force toggle off here to let the user try clicking again if it was a policy block
+          });
+        }
       } else {
         audioRef.current.pause();
       }
@@ -70,13 +77,34 @@ const BackgroundMusic = ({ isPlaying, setIsPlaying }: { isPlaying: boolean, setI
 
   return (
     <>
-      <audio ref={audioRef} loop src="https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3" />
+      <audio 
+        ref={audioRef} 
+        loop 
+        onError={() => setError(true)}
+        // Reliable Ambient Track (Forest Rain / Piano) from Pixabay CDN
+        src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" 
+      />
+      
+      {error && isPlaying && (
+        <div className="fixed bottom-20 right-6 z-[60] bg-red-50 text-red-500 text-[10px] font-bold px-3 py-2 rounded-xl shadow-lg border border-red-100 animate-fade-in">
+           Unable to load audio stream
+        </div>
+      )}
+
       <button 
         onClick={() => setIsPlaying(!isPlaying)}
-        className="fixed bottom-6 right-6 z-[60] p-3 rounded-full bg-white/80 backdrop-blur-md shadow-xl border border-white/50 text-denim hover:scale-110 transition-transform flex items-center gap-2 group"
+        className={`fixed bottom-6 right-6 z-[60] p-3 rounded-full backdrop-blur-md shadow-xl border transition-all duration-300 flex items-center gap-2 group ${isPlaying ? 'bg-lilacfizz text-white border-lilacfizz/50' : 'bg-white/80 text-denim border-white/50 hover:scale-110'}`}
       >
-        {isPlaying ? <Volume2 size={20} className="animate-pulse" /> : <VolumeX size={20} />}
-        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 text-xs font-bold whitespace-nowrap">
+        {isPlaying ? (
+            <div className="relative">
+                <Volume2 size={20} />
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+            </div>
+        ) : <VolumeX size={20} />}
+        <span className={`max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 text-xs font-bold whitespace-nowrap ${isPlaying ? 'text-white' : 'text-denim'}`}>
             {isPlaying ? "Pause Ambient" : "Play Ambient"}
         </span>
       </button>
@@ -104,8 +132,8 @@ const LandingPage = ({ onEnter, onToggleMusic, isMusicPlaying }: { onEnter: () =
              <span className="font-black text-2xl tracking-tighter text-gray-900">End Of Ash</span>
           </div>
           <div className="flex gap-4">
-             <button onClick={onToggleMusic} className="p-2.5 rounded-full bg-white/40 border border-white/50 hover:bg-white transition-colors">
-                {isMusicPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+             <button onClick={onToggleMusic} className={`p-2.5 rounded-full border transition-all duration-300 ${isMusicPlaying ? 'bg-lilacfizz text-white border-lilacfizz' : 'bg-white/40 border-white/50 hover:bg-white'}`}>
+                {isMusicPlaying ? <Volume2 size={20} className="animate-pulse" /> : <VolumeX size={20} />}
              </button>
              <button onClick={onEnter} className="px-6 py-2.5 rounded-full bg-gray-900 text-white text-sm font-bold hover:shadow-lg hover:shadow-gray-900/20 transition-all transform hover:-translate-y-0.5">
                 Sign In
@@ -202,9 +230,6 @@ const LandingPage = ({ onEnter, onToggleMusic, isMusicPlaying }: { onEnter: () =
                       <span className="text-sm font-bold text-gray-800 group-hover:text-lilacfizz transition-colors">
                          {person.name}
                       </span>
-                      {/* <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {person.role}
-                      </span> */}
                    </div>
                 ))}
              </div>
@@ -415,7 +440,7 @@ export default function App() {
 
             <div className="p-6">
                 {/* Music Toggle Sidebar */}
-                <button onClick={() => setIsMusicPlaying(!isMusicPlaying)} className="flex items-center gap-3 w-full px-4 py-3 mb-4 rounded-2xl bg-polarsky/10 hover:bg-polarsky/20 text-denim transition-colors">
+                <button onClick={() => setIsMusicPlaying(!isMusicPlaying)} className={`flex items-center gap-3 w-full px-4 py-3 mb-4 rounded-2xl transition-all duration-300 border ${isMusicPlaying ? 'bg-lilacfizz/10 border-lilacfizz text-lilacfizz' : 'bg-polarsky/10 border-transparent text-denim hover:bg-polarsky/20'}`}>
                     {isMusicPlaying ? <Volume2 size={18} className="animate-pulse" /> : <VolumeX size={18} />}
                     <span className="text-xs font-bold uppercase tracking-wider">{isMusicPlaying ? 'Music On' : 'Music Off'}</span>
                 </button>
@@ -485,7 +510,7 @@ const DashboardView = ({ user, dailyQuote, urges, updateSettings }: { user: User
   }, [urges]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-20">
         {/* Quote Hero */}
         <div className="relative overflow-hidden bg-gradient-to-r from-lilacfizz via-[#D4A5D1] to-mauvelous p-8 md:p-12 rounded-[3rem] text-white shadow-2xl shadow-lilacfizz/30">
             <div className="relative z-10 max-w-3xl">
