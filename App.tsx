@@ -5,7 +5,8 @@ import {
   ArrowRight, Calendar, CheckCircle2, Flame, Cigarette, Wine, Pill, Syringe,
   Skull, Baby, Search, Quote, Users, Leaf, Wind, Award, Medal, Crown, Star,
   Smartphone, Monitor, Tablet, Activity, Headphones, BookOpen, PenTool,
-  Wallet, AlertCircle, Music, Trees, CloudRain, Volume2, VolumeX, PlayCircle
+  Wallet, AlertCircle, Music, Trees, CloudRain, Volume2, VolumeX, PlayCircle,
+  Target, ShieldCheck, Smile, Brain
 } from 'lucide-react';
 import { UserProfile, AddictionType, QuitSpeed, UrgeLog, ChatMessage, JournalEntry, SavingsGoal, HealthMilestone } from './types';
 import { Button, Input, Select, Card, StatCard, BentoCard, ProgressBar, MoodSelector } from './components/UI';
@@ -240,20 +241,23 @@ const LandingPage = ({ onEnter, onToggleMusic, isMusicPlaying }: { onEnter: () =
   );
 };
 
-// --- Onboarding Component ---
+// --- Updated Onboarding Component ---
 const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void }) => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdIntervalRef = useRef<number | null>(null);
+
   const [formData, setFormData] = useState<Partial<UserProfile>>({
     addiction: AddictionType.CIGARETTES,
     quitSpeed: QuitSpeed.COLD_TURKEY,
-    frequencyPerWeek: 50,
+    frequencyPerWeek: 20,
     age: 25,
     name: '',
     reasonForQuitting: '',
     reminderTime: '09:00',
     startDate: new Date().toISOString(),
-    dailyCost: 0
+    dailyCost: 10
   });
 
   const nextStep = () => {
@@ -263,54 +267,220 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
       setIsAnimating(false);
     }, 400);
   };
-  const prevStep = () => setStep(p => p - 1);
-  const submit = () => { if (formData.name && formData.addiction) onComplete(formData as UserProfile); };
+
+  const prevStep = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+        setStep(p => p - 1);
+        setIsAnimating(false);
+    }, 400);
+  }
+
+  // Hold to commit logic
+  const startHold = () => {
+    if (holdIntervalRef.current) return;
+    holdIntervalRef.current = window.setInterval(() => {
+      setHoldProgress(prev => {
+        if (prev >= 100) {
+          if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+          if (formData.name && formData.addiction) onComplete(formData as UserProfile);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 20);
+  };
+
+  const stopHold = () => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    setHoldProgress(0);
+  };
+
+  const MotivationChip = ({ label, emoji }: { label: string, emoji: string }) => (
+    <button 
+        onClick={() => setFormData({...formData, reasonForQuitting: (formData.reasonForQuitting ? formData.reasonForQuitting + ' ' : '') + label})}
+        className="px-4 py-2 bg-white/50 border border-white/40 rounded-full text-sm font-bold text-gray-600 hover:bg-lilacfizz/20 hover:text-lilacfizz hover:border-lilacfizz transition-all"
+    >
+        {emoji} {label}
+    </button>
+  );
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 text-center relative overflow-hidden bg-[#FAFAFA] font-sans">
       <div className="fixed inset-0 z-0 aurora-bg opacity-20"></div>
 
-      <div className={`w-full max-w-xl relative z-10 transition-all duration-500 transform ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'} animate-slide-up`}>
-        {step === 1 && (
+      {/* Progress Dots */}
+      <div className="fixed top-10 flex gap-2 z-20">
+         {[0,1,2,3,4,5].map(i => (
+             <div key={i} className={`h-2 rounded-full transition-all duration-500 ${step === i ? 'w-8 bg-denim' : step > i ? 'w-2 bg-denim/40' : 'w-2 bg-gray-200'}`} />
+         ))}
+      </div>
+
+      <div className={`w-full max-w-xl relative z-10 transition-all duration-500 transform ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} animate-slide-up`}>
+        
+        {/* Step 0: Name */}
+        {step === 0 && (
           <Card className="p-8 md:p-12 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl">
              <div className="w-20 h-20 bg-gradient-to-tr from-denim to-polarsky rounded-[2rem] mx-auto flex items-center justify-center text-white mb-8 shadow-xl shadow-denim/20 transform -rotate-6">
-               <Sparkles size={40} />
+               <Smile size={40} />
              </div>
-             <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tighter">Welcome</h1>
-             <p className="text-gray-500 mb-8 font-medium">Let's set up your personal recovery space.</p>
+             <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tighter">Hi there.</h1>
+             <p className="text-gray-500 mb-8 font-medium text-lg">I'm your new recovery companion. <br/>What should I call you?</p>
              <div className="space-y-6 max-w-sm mx-auto">
-               <Input placeholder="What's your name?" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="text-center text-lg h-14" autoFocus />
-               <Button onClick={nextStep} disabled={!formData.name} variant="lilac" className="w-full text-lg h-14" icon={<ArrowRight />}>Begin Journey</Button>
+               <Input 
+                 placeholder="Your Name" 
+                 value={formData.name} 
+                 onChange={e => setFormData({...formData, name: e.target.value})} 
+                 className="text-center text-2xl h-16 font-bold" 
+                 autoFocus 
+               />
+               <Button onClick={nextStep} disabled={!formData.name} variant="lilac" className="w-full text-lg h-14" icon={<ArrowRight />}>Continue</Button>
              </div>
           </Card>
         )}
-        {step === 2 && (
-          <Card className="p-6 md:p-10 shadow-2xl shadow-mauvelous/10 border-white/60 backdrop-blur-xl" title="Choose your battle" headerColor="text-mauvelous text-center w-full block text-2xl md:text-3xl font-black mb-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 mt-6">
+
+        {/* Step 1: Addiction */}
+        {step === 1 && (
+          <Card className="p-6 md:p-10 shadow-2xl shadow-mauvelous/10 border-white/60 backdrop-blur-xl" title={`Nice to meet you, ${formData.name}.`} headerColor="text-gray-900 text-center w-full block text-2xl md:text-3xl font-black mb-1">
+            <p className="text-gray-500 mb-6 text-center">What are we overcoming together?</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
               {Object.values(AddictionType).map((type) => (
-                <button key={type} onClick={() => setFormData({...formData, addiction: type})} className={`relative p-3 md:p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-3 aspect-square justify-center group ${formData.addiction === type ? 'border-mauvelous bg-mauvelous/5' : 'border-transparent bg-white/50 hover:bg-white'}`}>
-                  <span className={`font-bold text-xs md:text-sm ${formData.addiction === type ? 'text-mauvelous' : 'text-gray-500'}`}>{type}</span>
-                  {formData.addiction === type && <CheckCircle2 size={16} className="text-mauvelous absolute top-2 right-2" />}
+                <button key={type} onClick={() => setFormData({...formData, addiction: type})} className={`relative p-4 md:p-5 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center gap-3 aspect-square justify-center group ${formData.addiction === type ? 'border-mauvelous bg-mauvelous/10 scale-105 shadow-lg shadow-mauvelous/20' : 'border-transparent bg-white/60 hover:bg-white hover:scale-105'}`}>
+                  <span className={`font-black text-xs md:text-sm uppercase tracking-wider ${formData.addiction === type ? 'text-mauvelous' : 'text-gray-400 group-hover:text-gray-600'}`}>{type}</span>
+                  {formData.addiction === type && <CheckCircle2 size={24} className="text-mauvelous absolute top-3 right-3 animate-slide-up" />}
                 </button>
               ))}
             </div>
-            <div className="flex gap-4 mt-10"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="mauve" className="flex-1">Confirm</Button></div>
+            <div className="flex gap-4 mt-10"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="mauve" className="flex-1">Next</Button></div>
           </Card>
         )}
-        {step === 3 && (
-            <Card className="p-8 md:p-10 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl" title="The Cost" headerColor="text-denim text-2xl font-black mb-2">
-                <div className="space-y-6">
-                    <Input label="Average Daily Cost ($)" type="number" value={formData.dailyCost} onChange={e => setFormData({...formData, dailyCost: parseFloat(e.target.value)})} />
-                    <Input label="Your Age" type="number" value={formData.age} onChange={e => setFormData({...formData, age: parseInt(e.target.value)})} />
+
+        {/* Step 2: Stats */}
+        {step === 2 && (
+            <Card className="p-8 md:p-10 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl" title="The Impact" headerColor="text-denim text-2xl font-black mb-2 text-center">
+                <p className="text-gray-500 mb-8 text-center">Let's quantify your habit to measure your success later.</p>
+                <div className="space-y-8 text-left">
+                    <div>
+                        <div className="flex justify-between mb-2">
+                             <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Average Daily Cost</label>
+                             <span className="text-xl font-black text-denim">${formData.dailyCost}</span>
+                        </div>
+                        <input type="range" min="0" max="100" step="1" value={formData.dailyCost} onChange={e => setFormData({...formData, dailyCost: parseFloat(e.target.value)})} className="w-full accent-denim h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                    </div>
+
+                    <div>
+                        <div className="flex justify-between mb-2">
+                             <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Usage per Week</label>
+                             <span className="text-xl font-black text-denim">{formData.frequencyPerWeek} times</span>
+                        </div>
+                        <input type="range" min="1" max="100" step="1" value={formData.frequencyPerWeek} onChange={e => setFormData({...formData, frequencyPerWeek: parseFloat(e.target.value)})} className="w-full accent-denim h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                    </div>
+                    
+                     <div>
+                        <Input label="Your Age" type="number" value={formData.age} onChange={e => setFormData({...formData, age: parseInt(e.target.value)})} />
+                    </div>
+
                     <div className="flex gap-4 mt-6"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="primary" className="flex-1">Next</Button></div>
                 </div>
             </Card>
         )}
-        {step === 4 && (
-          <Card className="p-8 md:p-10 shadow-2xl shadow-lilacfizz/10 border-white/60 backdrop-blur-xl" title="Final Commitment" headerColor="text-lilacfizz text-2xl font-black mb-4">
-             <textarea placeholder="I am quitting because..." value={formData.reasonForQuitting} onChange={e => setFormData({...formData, reasonForQuitting: e.target.value})} className="w-full h-32 p-6 bg-lilacfizz/5 rounded-3xl border-2 border-lilacfizz/20 focus:border-lilacfizz outline-none resize-none font-medium text-lg text-gray-700" />
-             <div className="flex gap-4 mt-8"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={submit} variant="lilac" className="flex-1">Start My New Life</Button></div>
+
+        {/* Step 3: Motivation */}
+        {step === 3 && (
+          <Card className="p-8 md:p-10 shadow-2xl shadow-lilacfizz/10 border-white/60 backdrop-blur-xl" title="Why now?" headerColor="text-lilacfizz text-3xl font-black mb-2 text-center">
+             <p className="text-gray-500 mb-6 text-center">Your "why" is your strongest weapon.</p>
+             
+             <div className="flex flex-wrap gap-2 justify-center mb-6">
+                <MotivationChip label="Health" emoji="❤️" />
+                <MotivationChip label="Money" emoji="💰" />
+                <MotivationChip label="Family" emoji="👨‍👩‍👧" />
+                <MotivationChip label="Mental Clarity" emoji="🧠" />
+                <MotivationChip label="Self-Respect" emoji="🦁" />
+             </div>
+
+             <textarea 
+                placeholder="I am doing this because..." 
+                value={formData.reasonForQuitting} 
+                onChange={e => setFormData({...formData, reasonForQuitting: e.target.value})} 
+                className="w-full h-32 p-6 bg-white/50 rounded-3xl border-2 border-lilacfizz/20 focus:border-lilacfizz outline-none resize-none font-medium text-lg text-gray-700 shadow-inner" 
+             />
+             <div className="flex gap-4 mt-8"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="lilac" className="flex-1">Next</Button></div>
           </Card>
+        )}
+
+        {/* Step 4: Tutorial (Mini Tour) */}
+        {step === 4 && (
+            <Card className="p-0 shadow-2xl shadow-polarsky/20 border-white/60 backdrop-blur-xl overflow-hidden">
+                <div className="bg-gradient-to-br from-polarsky via-denim to-gray-800 text-white p-10 text-center relative overflow-hidden">
+                    <Sparkles className="absolute top-4 right-4 opacity-30 animate-pulse" />
+                    <h2 className="text-3xl font-black mb-2 relative z-10">What to Expect</h2>
+                    <p className="text-white/80 relative z-10">Here is your toolkit for success.</p>
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                </div>
+                
+                <div className="p-8 space-y-6">
+                    <div className="flex gap-4 items-start text-left group">
+                        <div className="p-3 bg-lilacfizz/10 text-lilacfizz rounded-xl group-hover:scale-110 transition-transform"><Brain size={24} /></div>
+                        <div>
+                            <h4 className="font-bold text-gray-900">AI Companion</h4>
+                            <p className="text-sm text-gray-500">24/7 support for cravings and questions.</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 items-start text-left group">
+                         <div className="p-3 bg-denim/10 text-denim rounded-xl group-hover:scale-110 transition-transform"><Activity size={24} /></div>
+                        <div>
+                            <h4 className="font-bold text-gray-900">Health Recovery</h4>
+                            <p className="text-sm text-gray-500">Watch your body heal biologically.</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 items-start text-left group">
+                         <div className="p-3 bg-mauvelous/10 text-mauvelous rounded-xl group-hover:scale-110 transition-transform"><ShieldCheck size={24} /></div>
+                        <div>
+                            <h4 className="font-bold text-gray-900">Panic Button</h4>
+                            <p className="text-sm text-gray-500">Instant calm when urges strike hard.</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-8 pt-0 flex gap-4"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="primary" className="flex-1">I'm Ready</Button></div>
+            </Card>
+        )}
+
+        {/* Step 5: The Pledge */}
+        {step === 5 && (
+            <Card className="p-8 md:p-12 shadow-2xl shadow-lilacfizz/20 border-white/60 backdrop-blur-xl relative overflow-hidden">
+                <div className="relative z-10">
+                    <div className="w-24 h-24 bg-gradient-to-br from-lilacfizz to-mauvelous rounded-full mx-auto flex items-center justify-center text-white mb-6 shadow-xl animate-pulse">
+                        <Target size={40} />
+                    </div>
+                    <h2 className="text-4xl font-black text-gray-900 mb-4">The Pledge</h2>
+                    <p className="text-gray-600 mb-10 max-w-sm mx-auto leading-relaxed">
+                        I, <span className="font-bold text-denim">{formData.name}</span>, commit to leaving <span className="font-bold text-mauvelous">{formData.addiction}</span> behind starting today. I choose health, freedom, and a better future.
+                    </p>
+                    
+                    <div className="relative flex justify-center">
+                        <button
+                            onMouseDown={startHold}
+                            onMouseUp={stopHold}
+                            onMouseLeave={stopHold}
+                            onTouchStart={startHold}
+                            onTouchEnd={stopHold}
+                            className="relative overflow-hidden rounded-full w-24 h-24 bg-white border-4 border-gray-100 shadow-xl flex items-center justify-center group active:scale-95 transition-transform select-none"
+                        >
+                             <div 
+                                className="absolute inset-0 bg-gradient-to-t from-lilacfizz to-mauvelous transition-all duration-75 ease-linear" 
+                                style={{ height: `${holdProgress}%` }}
+                             />
+                             <div className="relative z-10 bg-white p-4 rounded-full">
+                                 <Zap size={24} className={`text-gray-400 ${holdProgress > 0 ? 'text-mauvelous' : ''}`} />
+                             </div>
+                        </button>
+                    </div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-4">Hold to Commit</p>
+                </div>
+            </Card>
         )}
       </div>
     </div>
