@@ -3,10 +3,6 @@ import { ChatMessage } from "../types";
 
 const API_KEY = process.env.API_KEY || '';
 
-// Initialize the client
-// We create a factory or singleton to ensure we don't init without a key if possible,
-// but for this structure, we instantiate on demand or check key presence.
-
 const getAiClient = () => {
   if (!API_KEY) {
     console.warn("No API_KEY found in process.env");
@@ -85,5 +81,20 @@ export const getSmartAlternatives = async (addiction: string, intensity: number)
         return response.text || "Try deep breathing, drinking water, or going for a walk.";
     } catch (e) {
         return "Try deep breathing, drinking water, or going for a walk.";
+    }
+}
+
+export const generateJournalPrompt = async (mood: string): Promise<string> => {
+    const ai = getAiClient();
+    if (!ai) return "What is on your mind today?";
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `Generate one thoughtful, deep journal reflection prompt for someone in recovery who is feeling ${mood} today. Short and open-ended.`
+        });
+        return response.text || "Write about a moment you felt proud of yourself recently.";
+    } catch (e) {
+        return "How are you really feeling right now?";
     }
 }

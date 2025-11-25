@@ -16,6 +16,13 @@ export enum QuitSpeed {
   REPLACEMENT = 'Replacement Therapy'
 }
 
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  cost: number;
+  imageIcon?: string; // Icon name
+}
+
 export interface UserProfile {
   name: string;
   age: number;
@@ -26,6 +33,7 @@ export interface UserProfile {
   reasonForQuitting: string;
   quitSpeed: QuitSpeed;
   dailyCost?: number;
+  savingsGoal?: SavingsGoal;
 }
 
 export interface UrgeLog {
@@ -36,10 +44,26 @@ export interface UrgeLog {
   notes?: string;
 }
 
+export interface JournalEntry {
+  id: string;
+  date: string; // ISO
+  mood: 'great' | 'good' | 'neutral' | 'bad' | 'terrible';
+  title: string;
+  content: string;
+  tags: string[];
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
   text: string;
+}
+
+export interface HealthMilestone {
+  day: number;
+  title: string;
+  description: string;
+  percentage: number; // 0-100 calculated at runtime
 }
 
 export interface AlternativeMethod {

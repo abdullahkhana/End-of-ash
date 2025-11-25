@@ -2,7 +2,7 @@ import React from 'react';
 
 // --- Button ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'mauve' | 'lilac';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'mauve' | 'lilac' | 'glass';
   isLoading?: boolean;
   icon?: React.ReactNode;
 }
@@ -16,7 +16,7 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   ...props 
 }) => {
-  const baseStyles = "relative overflow-hidden px-8 py-4 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-3 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98] text-sm tracking-wide shadow-lg hover:-translate-y-1";
+  const baseStyles = "relative overflow-hidden px-8 py-4 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-3 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98] text-sm tracking-wide shadow-lg hover:-translate-y-1 group";
   
   const variants = {
     primary: "bg-gradient-to-r from-denim to-[#7D8EAB] text-white hover:shadow-denim/40 focus:ring-denim/30 border border-white/20",
@@ -24,7 +24,8 @@ export const Button: React.FC<ButtonProps> = ({
     ghost: "bg-transparent text-gray-500 hover:text-denim hover:bg-polarsky/10 focus:ring-polarsky/20 shadow-none hover:translate-y-0",
     danger: "bg-white text-mauvelous border-2 border-mauvelous/20 hover:bg-red-50 focus:ring-mauvelous/20 shadow-sm",
     mauve: "bg-gradient-to-r from-mauvelous to-[#D17585] text-white hover:shadow-mauvelous/40 focus:ring-mauvelous/30 border border-white/20",
-    lilac: "bg-gradient-to-r from-lilacfizz to-[#B089AD] text-white hover:shadow-lilacfizz/40 focus:ring-lilacfizz/30 border border-white/20"
+    lilac: "bg-gradient-to-r from-lilacfizz to-[#B089AD] text-white hover:shadow-lilacfizz/40 focus:ring-lilacfizz/30 border border-white/20",
+    glass: "bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 hover:shadow-xl"
   };
 
   return (
@@ -33,11 +34,14 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={isLoading || disabled}
       {...props}
     >
+      {/* Shine Effect */}
+      <div className="absolute inset-0 -translate-x-full group-hover:animate-shine bg-gradient-to-r from-transparent via-white/20 to-transparent z-0" />
+      
       {isLoading ? (
         <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
       ) : (
         <>
-          {icon && <span className="opacity-90">{icon}</span>}
+          {icon && <span className="opacity-90 relative z-10">{icon}</span>}
           <span className="relative z-10">{children}</span>
         </>
       )}
@@ -117,6 +121,13 @@ export const Card: React.FC<CardProps> = ({ children, title, className = '', act
   );
 };
 
+// --- Bento Card (New) ---
+export const BentoCard: React.FC<CardProps & { cols?: string, rows?: string }> = ({ cols = 'col-span-1', rows = 'row-span-1', ...props }) => {
+  return (
+    <Card {...props} className={`${props.className} ${cols} ${rows} h-full`} />
+  );
+};
+
 // --- Stat Card ---
 interface StatCardProps {
   label: string;
@@ -124,7 +135,6 @@ interface StatCardProps {
   subValue?: string;
   icon?: React.ReactNode;
   colorTheme?: 'denim' | 'mauve' | 'lilac' | 'sky';
-  trend?: 'up' | 'down' | 'neutral';
 }
 
 export const StatCard: React.FC<StatCardProps> = ({ label, value, subValue, icon, colorTheme = 'denim' }) => {
@@ -177,6 +187,47 @@ export const StatCard: React.FC<StatCardProps> = ({ label, value, subValue, icon
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+// --- Progress Bar ---
+export const ProgressBar: React.FC<{ progress: number, color?: string, height?: string }> = ({ progress, color = 'bg-denim', height = 'h-3' }) => (
+  <div className={`w-full bg-gray-100 rounded-full overflow-hidden ${height}`}>
+    <div 
+      className={`${color} h-full rounded-full transition-all duration-1000 ease-out`} 
+      style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+    />
+  </div>
+);
+
+// --- Mood Selector ---
+interface MoodSelectorProps {
+  value: string;
+  onChange: (val: string) => void;
+}
+
+export const MoodSelector: React.FC<MoodSelectorProps> = ({ value, onChange }) => {
+  const moods = [
+    { id: 'great', label: 'Great', emoji: '🤩', color: 'bg-lilacfizz' },
+    { id: 'good', label: 'Good', emoji: '🙂', color: 'bg-polarsky' },
+    { id: 'neutral', label: 'Okay', emoji: '😐', color: 'bg-gray-200' },
+    { id: 'bad', label: 'Bad', emoji: '😔', color: 'bg-denim' },
+    { id: 'terrible', label: 'Awful', emoji: '😫', color: 'bg-mauvelous' },
+  ];
+
+  return (
+    <div className="flex justify-between gap-2">
+      {moods.map(m => (
+        <button
+          key={m.id}
+          onClick={() => onChange(m.id)}
+          className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-300 ${value === m.id ? `${m.color} text-white scale-110 shadow-lg` : 'bg-gray-50 hover:bg-gray-100'}`}
+        >
+          <span className="text-2xl">{m.emoji}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider">{m.label}</span>
+        </button>
+      ))}
     </div>
   );
 };
