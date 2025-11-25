@@ -5,9 +5,9 @@ import {
   ArrowRight, Calendar, CheckCircle2, Flame, Cigarette, Wine, Pill, Syringe,
   Skull, Baby, Search, Quote, Users, Leaf, Wind, Award, Medal, Crown, Star,
   Smartphone, Monitor, Tablet, Activity, Headphones, BookOpen, PenTool,
-  Wallet, AlertCircle, Music, Trees, CloudRain
+  Wallet, AlertCircle, Music, Trees, CloudRain, Volume2, VolumeX, PlayCircle
 } from 'lucide-react';
-import { UserProfile, AddictionType, QuitSpeed, UrgeLog, ChatMessage, JournalEntry, SavingsGoal } from './types';
+import { UserProfile, AddictionType, QuitSpeed, UrgeLog, ChatMessage, JournalEntry, SavingsGoal, HealthMilestone } from './types';
 import { Button, Input, Select, Card, StatCard, BentoCard, ProgressBar, MoodSelector } from './components/UI';
 import { streamChatResponse, generateDailyQuote, getSmartAlternatives, generateJournalPrompt } from './services/geminiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
@@ -53,101 +53,169 @@ const format = (date: Date, formatStr: string) => {
   return date.toLocaleDateString();
 };
 
+// --- Music Player Component ---
+const BackgroundMusic = ({ isPlaying, setIsPlaying }: { isPlaying: boolean, setIsPlaying: (v: boolean) => void }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.2; // Low volume by default
+      if (isPlaying) {
+        audioRef.current.play().catch(e => console.log("Auto-play blocked", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
+  return (
+    <>
+      <audio ref={audioRef} loop src="https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3" />
+      <button 
+        onClick={() => setIsPlaying(!isPlaying)}
+        className="fixed bottom-6 right-6 z-[60] p-3 rounded-full bg-white/80 backdrop-blur-md shadow-xl border border-white/50 text-denim hover:scale-110 transition-transform flex items-center gap-2 group"
+      >
+        {isPlaying ? <Volume2 size={20} className="animate-pulse" /> : <VolumeX size={20} />}
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 text-xs font-bold whitespace-nowrap">
+            {isPlaying ? "Pause Ambient" : "Play Ambient"}
+        </span>
+      </button>
+    </>
+  );
+};
+
 // --- Landing Page ---
-const LandingPage = ({ onEnter }: { onEnter: () => void }) => {
+const LandingPage = ({ onEnter, onToggleMusic, isMusicPlaying }: { onEnter: () => void, onToggleMusic: () => void, isMusicPlaying: boolean }) => {
   return (
     <div className="min-h-screen relative flex flex-col overflow-x-hidden bg-[#FAFAFA] selection:bg-lilacfizz selection:text-white font-sans">
+       {/* Aurora Background */}
+       <div className="fixed inset-0 z-0 opacity-30 aurora-bg"></div>
        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-[-10%] right-[-10%] w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-cottoncandy/40 rounded-full mix-blend-multiply filter blur-[80px] animate-blob"></div>
-          <div className="absolute bottom-[10%] left-[-10%] w-[350px] md:w-[500px] h-[350px] md:h-[500px] bg-polarsky/40 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000"></div>
-          <div className="absolute top-[40%] left-[20%] w-[300px] md:w-[400px] h-[300px] md:h-[400px] bg-lilacfizz/30 rounded-full mix-blend-multiply filter blur-[60px] animate-blob animation-delay-4000"></div>
+          <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-white rounded-full mix-blend-overlay filter blur-[100px] animate-blob"></div>
+          <div className="absolute bottom-[20%] left-[10%] w-[600px] h-[600px] bg-lilacfizz/20 rounded-full mix-blend-multiply filter blur-[120px] animate-blob animation-delay-4000"></div>
        </div>
 
-       <nav className="relative z-20 w-full max-w-7xl mx-auto px-6 py-6 md:py-8 flex justify-between items-center animate-fade-in">
-          <div className="flex items-center gap-2.5 group cursor-pointer">
-             <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-denim to-lilacfizz rounded-2xl flex items-center justify-center text-white shadow-xl shadow-denim/20 transition-transform group-hover:rotate-6 border border-white/20">
+       {/* Nav */}
+       <nav className="relative z-20 w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center animate-fade-in">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-gradient-to-br from-denim to-lilacfizz rounded-xl flex items-center justify-center text-white shadow-lg shadow-denim/20">
                 <Sparkles size={20} fill="currentColor" />
              </div>
-             <span className="font-black text-2xl md:text-3xl tracking-tighter text-gray-900 group-hover:text-denim transition-colors">End Of Ash</span>
+             <span className="font-black text-2xl tracking-tighter text-gray-900">End Of Ash</span>
           </div>
-          <button onClick={onEnter} className="px-6 py-2.5 rounded-full bg-white/50 border border-white backdrop-blur-md text-sm font-bold text-gray-800 hover:bg-white hover:text-denim hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-             Member Login
-          </button>
+          <div className="flex gap-4">
+             <button onClick={onToggleMusic} className="p-2.5 rounded-full bg-white/40 border border-white/50 hover:bg-white transition-colors">
+                {isMusicPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+             </button>
+             <button onClick={onEnter} className="px-6 py-2.5 rounded-full bg-gray-900 text-white text-sm font-bold hover:shadow-lg hover:shadow-gray-900/20 transition-all transform hover:-translate-y-0.5">
+                Sign In
+             </button>
+          </div>
        </nav>
 
-       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 pb-20 mt-10 md:mt-0">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-white backdrop-blur-md shadow-sm mb-6 animate-slide-up hover:shadow-md transition-shadow cursor-default">
-             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-             <span className="text-[10px] md:text-xs font-bold text-denim uppercase tracking-widest">Reclaim Your Life Today</span>
+       {/* Hero */}
+       <main className="relative z-10 flex-1 flex flex-col items-center pt-10 md:pt-20 pb-20 px-4">
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/40 border border-white backdrop-blur-md shadow-sm mb-8 animate-slide-up">
+             <span className="relative flex h-2 w-2">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+             </span>
+             <span className="text-[10px] md:text-xs font-black text-gray-600 uppercase tracking-widest">AI-Powered Recovery OS</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter mb-8 leading-[0.95] animate-slide-up delay-100 drop-shadow-sm">
-             <span className="block text-gray-900 mb-2 md:mb-0">Break Free.</span>
-             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-mauvelous via-lilacfizz to-denim pb-2">Live Pure.</span>
+          <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-black tracking-tighter text-center leading-[0.9] mb-8 animate-slide-up delay-100 max-w-5xl mx-auto drop-shadow-sm">
+             <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">Sober is the</span>
+             <br />
+             <span className="text-transparent bg-clip-text bg-gradient-to-r from-mauvelous via-lilacfizz to-denim">New High.</span>
           </h1>
           
-          <p className="max-w-xl text-base md:text-xl lg:text-2xl text-gray-500 font-medium leading-relaxed mb-10 md:mb-12 animate-slide-up delay-200 px-4">
-             The intelligent AI companion designed to help you overcome addiction, track your sobriety, and find your inner peace.
+          <p className="max-w-2xl text-center text-lg md:text-xl text-gray-500 font-medium leading-relaxed mb-12 animate-slide-up delay-200 px-4">
+             A beautifully designed sanctuary for your recovery. Track progress, visualize health improvements, and find peace with built-in AI support.
           </p>
           
-          <div className="animate-slide-up delay-300 w-full md:w-auto px-6">
+          <div className="animate-slide-up delay-300 w-full flex justify-center px-6">
              <Button 
                 onClick={onEnter} 
-                variant="denim" 
-                className="w-full md:w-auto text-lg px-12 py-5 h-auto rounded-[2rem] shadow-2xl shadow-denim/30 hover:shadow-denim/50 border-white/20 transform hover:-translate-y-1"
+                variant="primary" 
+                className="text-lg px-12 py-5 h-auto rounded-full shadow-2xl shadow-denim/40 hover:shadow-denim/60 border-2 border-white/20 transform hover:-translate-y-1 w-full md:w-auto"
                 icon={<ArrowRight />}
              >
-                Start Your Journey
+                Begin Your Transformation
              </Button>
           </div>
 
-          <div className="mt-16 md:mt-24 flex gap-4 md:gap-8 opacity-50 animate-fade-in delay-500">
-             <div className="flex flex-col items-center gap-2">
-                <Smartphone className="text-denim" size={24} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Mobile</span>
+          {/* Feature Grid (Bento) */}
+          <div className="mt-24 w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 px-4 animate-fade-in delay-500">
+             <div className="md:col-span-2 glass-morphism p-8 rounded-[2.5rem] relative overflow-hidden group hover:-translate-y-1 transition-transform duration-500">
+                <div className="relative z-10">
+                   <div className="w-12 h-12 bg-lilacfizz/20 rounded-2xl flex items-center justify-center text-lilacfizz mb-4"><MessageSquare /></div>
+                   <h3 className="text-2xl font-bold mb-2">Always-On AI Companion</h3>
+                   <p className="text-gray-500 max-w-md">Chat with an intelligent assistant trained in CBT and addiction recovery. Get instant advice on cravings, triggers, and anxiety relief.</p>
+                </div>
+                <div className="absolute right-0 bottom-0 w-64 h-64 bg-gradient-to-tl from-lilacfizz/20 to-transparent rounded-tl-[100px]"></div>
              </div>
-             <div className="flex flex-col items-center gap-2">
-                <Tablet className="text-lilacfizz" size={24} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Tablet</span>
+
+             <div className="glass-morphism p-8 rounded-[2.5rem] relative overflow-hidden group hover:-translate-y-1 transition-transform duration-500">
+                <div className="w-12 h-12 bg-denim/20 rounded-2xl flex items-center justify-center text-denim mb-4"><Activity /></div>
+                <h3 className="text-2xl font-bold mb-2">Health Timeline</h3>
+                <p className="text-gray-500">See your body heal in real-time as you stay sober.</p>
              </div>
-             <div className="flex flex-col items-center gap-2">
-                <Monitor className="text-mauvelous" size={24} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Web</span>
+
+             <div className="glass-morphism p-8 rounded-[2.5rem] relative overflow-hidden group hover:-translate-y-1 transition-transform duration-500">
+                 <div className="w-12 h-12 bg-mauvelous/20 rounded-2xl flex items-center justify-center text-mauvelous mb-4"><HeartHandshake /></div>
+                <h3 className="text-2xl font-bold mb-2">Panic Button</h3>
+                <p className="text-gray-500">Immediate grounding techniques when urge strikes.</p>
+             </div>
+
+             <div className="md:col-span-2 glass-morphism p-8 rounded-[2.5rem] relative overflow-hidden group hover:-translate-y-1 transition-transform duration-500 flex items-center justify-between">
+                <div>
+                   <h3 className="text-2xl font-bold mb-2">Ambient Sanctuary</h3>
+                   <p className="text-gray-500 max-w-xs">Built-in LoFi and soundscapes to calm your mind.</p>
+                </div>
+                <div className="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center text-white animate-spin-slow shadow-xl">
+                   <Music size={32} />
+                </div>
              </div>
           </div>
        </main>
 
-       <footer className="relative z-20 w-full py-10 md:py-12 border-t border-gray-100 bg-white/40 backdrop-blur-xl animate-fade-in delay-500">
+       {/* Footer / Credits */}
+       <footer className="relative z-20 w-full py-16 border-t border-white/50 bg-white/30 backdrop-blur-xl animate-fade-in delay-700">
           <div className="max-w-7xl mx-auto px-6 text-center">
-             <div className="flex items-center justify-center gap-3 mb-6 opacity-60">
-                <div className="h-px w-8 bg-denim"></div>
-                <p className="text-[10px] font-extrabold text-denim uppercase tracking-[0.3em]">Project Created By</p>
-                <div className="h-px w-8 bg-denim"></div>
+             <div className="flex items-center justify-center gap-4 mb-10 opacity-60">
+                <div className="h-px w-12 bg-denim"></div>
+                <p className="text-[11px] font-black text-denim uppercase tracking-[0.4em]">Crafted By The Team</p>
+                <div className="h-px w-12 bg-denim"></div>
              </div>
              
-             <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 md:gap-12">
+             <div className="flex flex-wrap justify-center gap-8 md:gap-16">
                 {[
-                  'Anoushay Rafique',
-                  'Zainab Hafeez',
-                  'Aima Saqib',
-                  'Abeera Javaid'
-                ].map((name) => (
-                   <div key={name} className="group relative">
-                      <span className="text-sm md:text-base font-bold text-gray-600 group-hover:text-lilacfizz transition-colors cursor-default">
-                         {name}
+                  { name: 'Anoushay Rafique', role: 'Lead Developer' },
+                  { name: 'Zainab Hafeez', role: 'UI/UX Designer' },
+                  { name: 'Aima Saqib', role: 'Backend Logic' },
+                  { name: 'Abeera Javaid', role: 'Project Manager' }
+                ].map((person) => (
+                   <div key={person.name} className="group relative flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white to-gray-100 border border-white shadow-md mb-3 flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform duration-300">
+                          <Users size={24} />
+                      </div>
+                      <span className="text-sm font-bold text-gray-800 group-hover:text-lilacfizz transition-colors">
+                         {person.name}
                       </span>
-                      <div className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-gradient-to-r from-mauvelous to-lilacfizz transition-all duration-300 group-hover:w-full group-hover:left-0"></div>
+                      {/* <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {person.role}
+                      </span> */}
                    </div>
                 ))}
              </div>
-             <p className="text-xs text-gray-400 mt-8 font-medium">© {new Date().getFullYear()} End Of Ash. All rights reserved.</p>
+             <p className="text-xs text-gray-400 mt-16 font-medium">© {new Date().getFullYear()} End Of Ash. Made with ❤️ for a better future.</p>
           </div>
        </footer>
     </div>
   );
 };
 
-// --- Onboarding Component (Same as before, minimal updates) ---
+// --- Onboarding Component ---
 const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void }) => {
   const [step, setStep] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -175,19 +243,16 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 text-center relative overflow-hidden bg-[#FAFAFA] font-sans">
-      <div className="fixed inset-0 z-0">
-         <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-polarsky/40 rounded-full mix-blend-multiply filter blur-[120px] animate-blob"></div>
-         <div className="absolute bottom-[-20%] right-[-10%] w-[700px] h-[700px] bg-mauvelous/30 rounded-full mix-blend-multiply filter blur-[120px] animate-blob animation-delay-2000"></div>
-      </div>
+      <div className="fixed inset-0 z-0 aurora-bg opacity-20"></div>
 
       <div className={`w-full max-w-xl relative z-10 transition-all duration-500 transform ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'} animate-slide-up`}>
-        {/* Simplified Onboarding Steps */}
         {step === 1 && (
           <Card className="p-8 md:p-12 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl">
              <div className="w-20 h-20 bg-gradient-to-tr from-denim to-polarsky rounded-[2rem] mx-auto flex items-center justify-center text-white mb-8 shadow-xl shadow-denim/20 transform -rotate-6">
                <Sparkles size={40} />
              </div>
-             <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tighter">End Of Ash</h1>
+             <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tighter">Welcome</h1>
+             <p className="text-gray-500 mb-8 font-medium">Let's set up your personal recovery space.</p>
              <div className="space-y-6 max-w-sm mx-auto">
                <Input placeholder="What's your name?" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="text-center text-lg h-14" autoFocus />
                <Button onClick={nextStep} disabled={!formData.name} variant="lilac" className="w-full text-lg h-14" icon={<ArrowRight />}>Begin Journey</Button>
@@ -237,6 +302,7 @@ export default function App() {
   const [urges, setUrges] = useState<UrgeLog[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
   const [panicMode, setPanicMode] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
   // Load Data
   useEffect(() => {
@@ -265,6 +331,7 @@ export default function App() {
       localStorage.clear();
       setUser(null);
       setShowLanding(true);
+      setIsMusicPlaying(false);
     }
   };
 
@@ -274,100 +341,125 @@ export default function App() {
     setJournal([entry, ...journal]);
   };
 
-  if (showLanding) return <LandingPage onEnter={() => setShowLanding(false)} />;
-  if (!user) return <Onboarding onComplete={(p) => setUser(p)} />;
-
-  const SidebarItem = ({ id, icon, label, colorClass }: { id: typeof view, icon: React.ReactNode, label: string, colorClass: string }) => (
-    <button onClick={() => { setView(id); setIsSidebarOpen(false); }} className={`group flex items-center w-full gap-4 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 relative overflow-hidden mb-1 ${view === id ? `text-white shadow-lg ${colorClass} scale-[1.02]` : 'text-gray-400 hover:text-denim hover:bg-white/50'}`}>
-      <span className={`relative z-10 transition-transform duration-300 ${view === id ? 'scale-110' : 'group-hover:scale-110'}`}>{icon}</span>
-      <span className="relative z-10">{label}</span>
-    </button>
-  );
-
   return (
-    <div className="flex h-screen bg-[#FDFDFD] text-gray-800 font-sans selection:bg-lilacfizz selection:text-white overflow-hidden animate-fade-in">
-      {/* Panic Overlay */}
-      {panicMode && (
-          <div className="fixed inset-0 z-[100] bg-mauvelous/95 backdrop-blur-xl flex flex-col items-center justify-center text-white p-6 text-center animate-fade-in">
-              <div className="w-32 h-32 rounded-full border-4 border-white flex items-center justify-center animate-breathe mb-8">
-                  <span className="text-2xl font-black uppercase tracking-widest">Breathe</span>
+    <div className="h-screen bg-[#FDFDFD] text-gray-800 font-sans selection:bg-lilacfizz selection:text-white overflow-hidden animate-fade-in flex flex-col">
+      <BackgroundMusic isPlaying={isMusicPlaying} setIsPlaying={setIsMusicPlaying} />
+      
+      {showLanding ? (
+        <LandingPage onEnter={() => setShowLanding(false)} onToggleMusic={() => setIsMusicPlaying(!isMusicPlaying)} isMusicPlaying={isMusicPlaying} />
+      ) : !user ? (
+        <Onboarding onComplete={(p) => setUser(p)} />
+      ) : (
+        <div className="flex flex-1 overflow-hidden">
+          {/* Panic Overlay */}
+          {panicMode && (
+              <div className="fixed inset-0 z-[100] bg-mauvelous/95 backdrop-blur-xl flex flex-col items-center justify-center text-white p-6 text-center animate-fade-in">
+                  <div className="w-32 h-32 rounded-full border-4 border-white flex items-center justify-center animate-breathe mb-8">
+                      <span className="text-2xl font-black uppercase tracking-widest">Breathe</span>
+                  </div>
+                  <h1 className="text-5xl font-black mb-4">You Are Safe.</h1>
+                  <p className="text-xl font-medium max-w-md mb-12">This urge is temporary. It will pass in minutes. You have survived 100% of your bad days.</p>
+                  <div className="flex gap-4">
+                      <Button variant="glass" onClick={() => setPanicMode(false)}>I'm Okay Now</Button>
+                      <Button variant="glass" className="bg-white text-mauvelous border-white" onClick={() => {setPanicMode(false); setView('chat');}}>Talk to AI</Button>
+                  </div>
               </div>
-              <h1 className="text-5xl font-black mb-4">You Are Safe.</h1>
-              <p className="text-xl font-medium max-w-md mb-12">This urge is temporary. It will pass in minutes. You have survived 100% of your bad days.</p>
-              <div className="flex gap-4">
-                  <Button variant="glass" onClick={() => setPanicMode(false)}>I'm Okay Now</Button>
-                  <Button variant="glass" className="bg-white text-mauvelous border-white" onClick={() => {setPanicMode(false); setView('chat');}}>Talk to AI</Button>
+          )}
+
+          {/* Sidebar */}
+          <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-[280px] bg-white/60 backdrop-blur-xl border-r border-white/50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-[10px_0_30px_-10px_rgba(0,0,0,0.02)]`}>
+            <div className="p-8 pb-6 hidden lg:block">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-br from-denim to-polarsky rounded-2xl shadow-lg shadow-denim/20 flex items-center justify-center text-white transform rotate-3 hover:rotate-0 transition-all duration-300 border border-white/20">
+                  <Sparkles size={24} fill="currentColor" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black tracking-tighter text-gray-900">EOA</h1>
+                  <p className="text-[10px] text-denim font-extrabold uppercase tracking-widest mt-0.5">Recovery OS</p>
+                </div>
               </div>
-          </div>
+            </div>
+
+            <nav className="flex-1 px-4 overflow-y-auto py-4 lg:py-0 scrollbar-hide space-y-1">
+              <div className="lg:hidden p-4 mb-4 flex items-center gap-3">
+                 <div className="w-10 h-10 bg-denim rounded-xl flex items-center justify-center text-white"><Sparkles size={20} /></div>
+                 <span className="font-black text-xl">EOA</span>
+                 <button className="ml-auto" onClick={() => setIsSidebarOpen(false)}><X /></button>
+              </div>
+
+              {[
+                { id: 'dashboard', icon: <Home size={20} />, label: 'Overview', color: 'bg-gradient-to-r from-denim to-[#7D8EAB]' },
+                { id: 'health', icon: <Activity size={20} />, label: 'Health Timeline', color: 'bg-gradient-to-r from-teal-400 to-emerald-500' },
+                { id: 'journal', icon: <BookOpen size={20} />, label: 'Daily Journal', color: 'bg-gradient-to-r from-amber-400 to-orange-500' },
+                { id: 'urges', icon: <TrendingUp size={20} />, label: 'Urge Tracker', color: 'bg-gradient-to-r from-mauvelous to-[#D17585]' },
+                { id: 'chat', icon: <MessageSquare size={20} />, label: 'AI Companion', color: 'bg-gradient-to-r from-lilacfizz to-[#B089AD]' },
+                { id: 'alternatives', icon: <HeartHandshake size={20} />, label: 'Strategies', color: 'bg-gradient-to-r from-polarsky to-denim' },
+                { id: 'sanctuary', icon: <Headphones size={20} />, label: 'Sanctuary', color: 'bg-gradient-to-r from-indigo-400 to-violet-500' },
+                { id: 'breathe', icon: <Wind size={20} />, label: 'Breathing', color: 'bg-gradient-to-r from-cyan-400 to-blue-500' },
+              ].map(item => (
+                <button 
+                  key={item.id}
+                  onClick={() => { setView(item.id as any); setIsSidebarOpen(false); }} 
+                  className={`group flex items-center w-full gap-4 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 relative overflow-hidden mb-1 ${view === item.id ? `text-white shadow-lg ${item.color} scale-[1.02]` : 'text-gray-400 hover:text-denim hover:bg-white/50'}`}
+                >
+                  <span className={`relative z-10 transition-transform duration-300 ${view === item.id ? 'scale-110' : 'group-hover:scale-110'}`}>{item.icon}</span>
+                  <span className="relative z-10">{item.label}</span>
+                </button>
+              ))}
+              
+              <div className="my-4 h-px bg-gray-100 mx-6"></div>
+              <button onClick={() => { setView('settings'); setIsSidebarOpen(false); }} className={`group flex items-center w-full gap-4 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${view === 'settings' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-400 hover:text-gray-800'}`}>
+                  <Settings size={20} /> <span>Settings</span>
+              </button>
+            </nav>
+
+            <div className="p-6">
+                {/* Music Toggle Sidebar */}
+                <button onClick={() => setIsMusicPlaying(!isMusicPlaying)} className="flex items-center gap-3 w-full px-4 py-3 mb-4 rounded-2xl bg-polarsky/10 hover:bg-polarsky/20 text-denim transition-colors">
+                    {isMusicPlaying ? <Volume2 size={18} className="animate-pulse" /> : <VolumeX size={18} />}
+                    <span className="text-xs font-bold uppercase tracking-wider">{isMusicPlaying ? 'Music On' : 'Music Off'}</span>
+                </button>
+
+                <button 
+                    onClick={() => setPanicMode(true)}
+                    className="w-full mb-4 py-3 bg-red-500 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 hover:bg-red-600 transition-colors animate-pulse"
+                >
+                    <AlertCircle size={18} />
+                    <span>PANIC BUTTON</span>
+                </button>
+                <button onClick={handleLogout} className="flex items-center justify-center w-full gap-2 px-4 py-3 rounded-2xl text-xs font-bold text-gray-400 hover:text-mauvelous hover:bg-mauvelous/10 transition-colors">
+                    <LogOut size={16} />
+                    <span>SIGN OUT</span>
+                </button>
+                <div className="mt-4 text-[9px] text-gray-300 text-center font-bold uppercase tracking-wider leading-relaxed">
+                 Project by <br/> 
+                 <span className="text-gray-400">Anoushay, Zainab, Aima, Abeera</span>
+                </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 pt-4 lg:pt-0 h-full overflow-hidden relative z-10 flex flex-col">
+            {/* Mobile Toggle */}
+            <div className="lg:hidden px-6 py-4 flex justify-between items-center z-50">
+               <span className="font-black text-xl">EOA</span>
+               <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}><Menu /></button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scrollbar-hide">
+                 {view === 'dashboard' && <DashboardView user={user} dailyQuote={dailyQuote} urges={urges} updateSettings={updateUserSettings} />}
+                 {view === 'health' && <HealthTimeline user={user} />}
+                 {view === 'journal' && <JournalView user={user} journal={journal} addEntry={addJournalEntry} />}
+                 {view === 'urges' && <UrgesView urges={urges} onLogUrge={(u) => setUrges([u, ...urges])} />}
+                 {view === 'chat' && <ChatView user={user} />}
+                 {view === 'alternatives' && <AlternativesView user={user} />}
+                 {view === 'sanctuary' && <SanctuaryView />}
+                 {view === 'breathe' && <BreathingView />}
+                 {view === 'settings' && <SettingsView user={user} onUpdate={updateUserSettings} />}
+            </div>
+          </main>
+        </div>
       )}
-
-      {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-[280px] bg-white/60 backdrop-blur-xl border-r border-white/50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-[10px_0_30px_-10px_rgba(0,0,0,0.02)]`}>
-        <div className="p-8 pb-6 hidden lg:block">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-gradient-to-br from-denim to-polarsky rounded-2xl shadow-lg shadow-denim/20 flex items-center justify-center text-white transform rotate-3 hover:rotate-0 transition-all duration-300 border border-white/20">
-              <Sparkles size={24} fill="currentColor" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tighter text-gray-900">EOA</h1>
-              <p className="text-[10px] text-denim font-extrabold uppercase tracking-widest mt-0.5">Recovery OS</p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="flex-1 px-4 overflow-y-auto py-4 lg:py-0 scrollbar-hide space-y-1">
-          <SidebarItem id="dashboard" icon={<Home size={20} />} label="Overview" colorClass="bg-gradient-to-r from-denim to-[#7D8EAB]" />
-          <SidebarItem id="health" icon={<Activity size={20} />} label="Health Timeline" colorClass="bg-gradient-to-r from-teal-400 to-emerald-500" />
-          <SidebarItem id="journal" icon={<BookOpen size={20} />} label="Daily Journal" colorClass="bg-gradient-to-r from-amber-400 to-orange-500" />
-          <SidebarItem id="urges" icon={<TrendingUp size={20} />} label="Urge Tracker" colorClass="bg-gradient-to-r from-mauvelous to-[#D17585]" />
-          <SidebarItem id="chat" icon={<MessageSquare size={20} />} label="AI Companion" colorClass="bg-gradient-to-r from-lilacfizz to-[#B089AD]" />
-          <SidebarItem id="alternatives" icon={<HeartHandshake size={20} />} label="Strategies" colorClass="bg-gradient-to-r from-polarsky to-denim" />
-          <SidebarItem id="sanctuary" icon={<Headphones size={20} />} label="Sanctuary" colorClass="bg-gradient-to-r from-indigo-400 to-violet-500" />
-          <SidebarItem id="breathe" icon={<Wind size={20} />} label="Breathing" colorClass="bg-gradient-to-r from-cyan-400 to-blue-500" />
-          <div className="my-4 h-px bg-gray-100 mx-6"></div>
-          <SidebarItem id="settings" icon={<Settings size={20} />} label="Settings" colorClass="bg-gray-800" />
-        </nav>
-
-        <div className="p-6">
-            {/* Emergency Button */}
-            <button 
-                onClick={() => setPanicMode(true)}
-                className="w-full mb-4 py-3 bg-red-500 text-white rounded-2xl font-bold shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 hover:bg-red-600 transition-colors animate-pulse"
-            >
-                <AlertCircle size={18} />
-                <span>PANIC BUTTON</span>
-            </button>
-            <button onClick={handleLogout} className="flex items-center justify-center w-full gap-2 px-4 py-3 rounded-2xl text-xs font-bold text-gray-400 hover:text-mauvelous hover:bg-mauvelous/10 transition-colors">
-                <LogOut size={16} />
-                <span>SIGN OUT</span>
-            </button>
-            <div className="mt-4 text-[9px] text-gray-300 text-center font-bold uppercase tracking-wider leading-relaxed">
-             Project by <br/> 
-             <span className="text-gray-400">Anoushay, Zainab, Aima, Abeera</span>
-            </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 pt-4 lg:pt-0 h-full overflow-hidden relative z-10 flex flex-col">
-        {/* Mobile Toggle */}
-        <div className="lg:hidden px-6 py-4 flex justify-between items-center z-50">
-           <span className="font-black text-xl">EOA</span>
-           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}><Menu /></button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scrollbar-hide">
-             {view === 'dashboard' && <DashboardView user={user} dailyQuote={dailyQuote} urges={urges} updateSettings={updateUserSettings} />}
-             {view === 'health' && <HealthTimeline user={user} />}
-             {view === 'journal' && <JournalView user={user} journal={journal} addEntry={addJournalEntry} />}
-             {view === 'urges' && <UrgesView urges={urges} onLogUrge={(u) => setUrges([u, ...urges])} />}
-             {view === 'chat' && <ChatView user={user} />}
-             {view === 'alternatives' && <AlternativesView user={user} />}
-             {view === 'sanctuary' && <SanctuaryView />}
-             {view === 'breathe' && <BreathingView />}
-             {view === 'settings' && <SettingsView user={user} onUpdate={updateUserSettings} />}
-        </div>
-      </main>
     </div>
   );
 }
@@ -661,11 +753,6 @@ const BreathingView = () => (
         <p className="mt-12 text-gray-500 font-medium">Box Breathing: 4s In, 4s Hold, 4s Out, 4s Hold</p>
     </div>
 );
-
-// Reuse previous Urges, Chat, Alternatives views but wrapped in proper layout if needed.
-// For brevity, assuming UrgesView, ChatView, AlternativesView are imported or defined similarly to previous versions
-// but with updated UI components (Bento cards, etc). 
-// Re-implementing simplified versions here for completeness of the "Every Feature" request.
 
 const UrgesView = ({ urges, onLogUrge }: { urges: UrgeLog[], onLogUrge: (u: UrgeLog) => void }) => {
   const [intensity, setIntensity] = useState(5);
