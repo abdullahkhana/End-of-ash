@@ -152,7 +152,7 @@ const LandingPage = ({ onEnter, onToggleMusic, isMusicPlaying }: { onEnter: () =
              <span className="text-[10px] md:text-xs font-black text-gray-600 uppercase tracking-widest">AI-Powered Recovery OS</span>
           </div>
           
-          <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-black tracking-tighter text-center leading-[0.9] mb-8 animate-slide-up delay-100 max-w-5xl mx-auto drop-shadow-sm">
+          <h1 className="text-5xl md:text-8xl lg:text-[7rem] font-black tracking-tighter text-center leading-[0.9] mb-8 animate-slide-up delay-100 max-w-5xl mx-auto drop-shadow-sm">
              <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">Sober is the</span>
              <br />
              <span className="text-transparent bg-clip-text bg-gradient-to-r from-mauvelous via-lilacfizz to-denim">New High.</span>
@@ -211,30 +211,12 @@ const LandingPage = ({ onEnter, onToggleMusic, isMusicPlaying }: { onEnter: () =
        {/* Footer / Credits */}
        <footer className="relative z-20 w-full py-16 border-t border-white/50 bg-white/30 backdrop-blur-xl animate-fade-in delay-700">
           <div className="max-w-7xl mx-auto px-6 text-center">
-             <div className="flex items-center justify-center gap-4 mb-10 opacity-60">
+             <div className="flex items-center justify-center gap-4 mb-4 opacity-60">
                 <div className="h-px w-12 bg-denim"></div>
-                <p className="text-[11px] font-black text-denim uppercase tracking-[0.4em]">Crafted By The Team</p>
+                <p className="text-[11px] font-black text-denim uppercase tracking-[0.4em]">Project EOA</p>
                 <div className="h-px w-12 bg-denim"></div>
              </div>
-             
-             <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-                {[
-                  { name: 'Anoushay Rafique', role: 'Lead Developer' },
-                  { name: 'Zainab Hafeez', role: 'UI/UX Designer' },
-                  { name: 'Aima Saqib', role: 'Backend Logic' },
-                  { name: 'Abeera Javaid', role: 'Project Manager' }
-                ].map((person) => (
-                   <div key={person.name} className="group relative flex flex-col items-center">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white to-gray-100 border border-white shadow-md mb-3 flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform duration-300">
-                          <Users size={24} />
-                      </div>
-                      <span className="text-sm font-bold text-gray-800 group-hover:text-lilacfizz transition-colors">
-                         {person.name}
-                      </span>
-                   </div>
-                ))}
-             </div>
-             <p className="text-xs text-gray-400 mt-16 font-medium">© {new Date().getFullYear()} End Of Ash. Made with ❤️ for a better future.</p>
+             <p className="text-xs text-gray-400 font-medium">© {new Date().getFullYear()} End Of Ash. Made with ❤️ for a better future.</p>
           </div>
        </footer>
     </div>
@@ -313,9 +295,9 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
       <div className="fixed inset-0 z-0 aurora-bg opacity-20"></div>
 
       {/* Progress Dots */}
-      <div className="fixed top-10 flex gap-2 z-20">
+      <div className="fixed top-6 md:top-10 flex gap-2 z-20">
          {[0,1,2,3,4,5].map(i => (
-             <div key={i} className={`h-2 rounded-full transition-all duration-500 ${step === i ? 'w-8 bg-denim' : step > i ? 'w-2 bg-denim/40' : 'w-2 bg-gray-200'}`} />
+             <div key={i} className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ${step === i ? 'w-6 md:w-8 bg-denim' : step > i ? 'w-1.5 md:w-2 bg-denim/40' : 'w-1.5 md:w-2 bg-gray-200'}`} />
          ))}
       </div>
 
@@ -323,17 +305,18 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
         
         {/* Step 0: Name */}
         {step === 0 && (
-          <Card className="p-8 md:p-12 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl">
-             <div className="w-20 h-20 bg-gradient-to-tr from-denim to-polarsky rounded-[2rem] mx-auto flex items-center justify-center text-white mb-8 shadow-xl shadow-denim/20 transform -rotate-6">
-               <Smile size={40} />
+          <Card className="p-6 md:p-12 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl">
+             <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-tr from-denim to-polarsky rounded-[2rem] mx-auto flex items-center justify-center text-white mb-6 md:mb-8 shadow-xl shadow-denim/20 transform -rotate-6">
+               <Smile size={32} className="md:w-10 md:h-10" />
              </div>
              <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tighter">Hi there.</h1>
-             <p className="text-gray-500 mb-8 font-medium text-lg">I'm your new recovery companion. <br/>What should I call you?</p>
+             <p className="text-gray-500 mb-8 font-medium text-base md:text-lg">I'm your new recovery companion. <br/>What should I call you?</p>
              <div className="space-y-6 max-w-sm mx-auto">
                <Input 
                  placeholder="Your Name" 
                  value={formData.name} 
                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                 onKeyDown={(e) => e.key === 'Enter' && formData.name && nextStep()}
                  className="text-center text-2xl h-16 font-bold" 
                  autoFocus 
                />
@@ -344,25 +327,32 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
 
         {/* Step 1: Addiction */}
         {step === 1 && (
-          <Card className="p-6 md:p-10 shadow-2xl shadow-mauvelous/10 border-white/60 backdrop-blur-xl" title={`Nice to meet you, ${formData.name}.`} headerColor="text-gray-900 text-center w-full block text-2xl md:text-3xl font-black mb-1">
-            <p className="text-gray-500 mb-6 text-center">What are we overcoming together?</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+          <Card className="p-5 md:p-10 shadow-2xl shadow-mauvelous/10 border-white/60 backdrop-blur-xl" title={`Nice to meet you, ${formData.name}.`} headerColor="text-gray-900 text-center w-full block text-2xl md:text-3xl font-black mb-1">
+            <p className="text-gray-500 mb-6 text-center text-sm md:text-base">What are we overcoming together?</p>
+            <div className="grid grid-cols-2 gap-3">
               {Object.values(AddictionType).map((type) => (
-                <button key={type} onClick={() => setFormData({...formData, addiction: type})} className={`relative p-4 md:p-5 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center gap-3 aspect-square justify-center group ${formData.addiction === type ? 'border-mauvelous bg-mauvelous/10 scale-105 shadow-lg shadow-mauvelous/20' : 'border-transparent bg-white/60 hover:bg-white hover:scale-105'}`}>
+                <button 
+                  key={type} 
+                  onClick={() => {
+                      setFormData({...formData, addiction: type});
+                      nextStep(); // Auto-advance
+                  }} 
+                  className={`relative p-4 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center gap-2 md:gap-3 aspect-[1/0.8] justify-center group ${formData.addiction === type ? 'border-mauvelous bg-mauvelous/10 scale-95 shadow-lg shadow-mauvelous/20' : 'border-transparent bg-white/60 hover:bg-white hover:scale-105 active:scale-95'}`}
+                >
                   <span className={`font-black text-xs md:text-sm uppercase tracking-wider ${formData.addiction === type ? 'text-mauvelous' : 'text-gray-400 group-hover:text-gray-600'}`}>{type}</span>
-                  {formData.addiction === type && <CheckCircle2 size={24} className="text-mauvelous absolute top-3 right-3 animate-slide-up" />}
+                  {formData.addiction === type && <CheckCircle2 size={20} className="text-mauvelous absolute top-2 right-2 animate-slide-up" />}
                 </button>
               ))}
             </div>
-            <div className="flex gap-4 mt-10"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="mauve" className="flex-1">Next</Button></div>
+            <div className="flex gap-4 mt-6 md:mt-10"><Button variant="ghost" onClick={prevStep}>Back</Button></div>
           </Card>
         )}
 
         {/* Step 2: Stats */}
         {step === 2 && (
-            <Card className="p-8 md:p-10 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl" title="The Impact" headerColor="text-denim text-2xl font-black mb-2 text-center">
-                <p className="text-gray-500 mb-8 text-center">Let's quantify your habit to measure your success later.</p>
-                <div className="space-y-8 text-left">
+            <Card className="p-6 md:p-10 shadow-2xl shadow-denim/10 border-white/60 backdrop-blur-xl" title="The Impact" headerColor="text-denim text-2xl font-black mb-2 text-center">
+                <p className="text-gray-500 mb-8 text-center text-sm md:text-base">Let's quantify your habit to measure your success later.</p>
+                <div className="space-y-6 md:space-y-8 text-left">
                     <div>
                         <div className="flex justify-between mb-2">
                              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Average Daily Cost</label>
@@ -390,8 +380,8 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
 
         {/* Step 3: Motivation */}
         {step === 3 && (
-          <Card className="p-8 md:p-10 shadow-2xl shadow-lilacfizz/10 border-white/60 backdrop-blur-xl" title="Why now?" headerColor="text-lilacfizz text-3xl font-black mb-2 text-center">
-             <p className="text-gray-500 mb-6 text-center">Your "why" is your strongest weapon.</p>
+          <Card className="p-6 md:p-10 shadow-2xl shadow-lilacfizz/10 border-white/60 backdrop-blur-xl" title="Why now?" headerColor="text-lilacfizz text-3xl font-black mb-2 text-center">
+             <p className="text-gray-500 mb-6 text-center text-sm md:text-base">Your "why" is your strongest weapon.</p>
              
              <div className="flex flex-wrap gap-2 justify-center mb-6">
                 <MotivationChip label="Health" emoji="❤️" />
@@ -414,14 +404,14 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
         {/* Step 4: Tutorial (Mini Tour) */}
         {step === 4 && (
             <Card className="p-0 shadow-2xl shadow-polarsky/20 border-white/60 backdrop-blur-xl overflow-hidden">
-                <div className="bg-gradient-to-br from-polarsky via-denim to-gray-800 text-white p-10 text-center relative overflow-hidden">
+                <div className="bg-gradient-to-br from-polarsky via-denim to-gray-800 text-white p-6 md:p-10 text-center relative overflow-hidden">
                     <Sparkles className="absolute top-4 right-4 opacity-30 animate-pulse" />
-                    <h2 className="text-3xl font-black mb-2 relative z-10">What to Expect</h2>
-                    <p className="text-white/80 relative z-10">Here is your toolkit for success.</p>
+                    <h2 className="text-2xl md:text-3xl font-black mb-2 relative z-10">What to Expect</h2>
+                    <p className="text-white/80 relative z-10 text-sm md:text-base">Here is your toolkit for success.</p>
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                 </div>
                 
-                <div className="p-8 space-y-6">
+                <div className="p-6 md:p-8 space-y-4 md:space-y-6">
                     <div className="flex gap-4 items-start text-left group">
                         <div className="p-3 bg-lilacfizz/10 text-lilacfizz rounded-xl group-hover:scale-110 transition-transform"><Brain size={24} /></div>
                         <div>
@@ -444,7 +434,7 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
                         </div>
                     </div>
                 </div>
-                <div className="p-8 pt-0 flex gap-4"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="primary" className="flex-1">I'm Ready</Button></div>
+                <div className="p-6 md:p-8 pt-0 flex gap-4"><Button variant="ghost" onClick={prevStep}>Back</Button><Button onClick={nextStep} variant="primary" className="flex-1">I'm Ready</Button></div>
             </Card>
         )}
 
@@ -452,11 +442,11 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
         {step === 5 && (
             <Card className="p-8 md:p-12 shadow-2xl shadow-lilacfizz/20 border-white/60 backdrop-blur-xl relative overflow-hidden">
                 <div className="relative z-10">
-                    <div className="w-24 h-24 bg-gradient-to-br from-lilacfizz to-mauvelous rounded-full mx-auto flex items-center justify-center text-white mb-6 shadow-xl animate-pulse">
-                        <Target size={40} />
+                    <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-lilacfizz to-mauvelous rounded-full mx-auto flex items-center justify-center text-white mb-6 shadow-xl animate-pulse">
+                        <Target size={32} className="md:w-10 md:h-10" />
                     </div>
-                    <h2 className="text-4xl font-black text-gray-900 mb-4">The Pledge</h2>
-                    <p className="text-gray-600 mb-10 max-w-sm mx-auto leading-relaxed">
+                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">The Pledge</h2>
+                    <p className="text-gray-600 mb-10 max-w-sm mx-auto leading-relaxed text-sm md:text-base">
                         I, <span className="font-bold text-denim">{formData.name}</span>, commit to leaving <span className="font-bold text-mauvelous">{formData.addiction}</span> behind starting today. I choose health, freedom, and a better future.
                     </p>
                     
@@ -467,13 +457,13 @@ const Onboarding = ({ onComplete }: { onComplete: (profile: UserProfile) => void
                             onMouseLeave={stopHold}
                             onTouchStart={startHold}
                             onTouchEnd={stopHold}
-                            className="relative overflow-hidden rounded-full w-24 h-24 bg-white border-4 border-gray-100 shadow-xl flex items-center justify-center group active:scale-95 transition-transform select-none"
+                            className="relative overflow-hidden rounded-full w-20 h-20 md:w-24 md:h-24 bg-white border-4 border-gray-100 shadow-xl flex items-center justify-center group active:scale-95 transition-transform select-none tap-highlight-transparent"
                         >
                              <div 
                                 className="absolute inset-0 bg-gradient-to-t from-lilacfizz to-mauvelous transition-all duration-75 ease-linear" 
                                 style={{ height: `${holdProgress}%` }}
                              />
-                             <div className="relative z-10 bg-white p-4 rounded-full">
+                             <div className="relative z-10 bg-white p-3 md:p-4 rounded-full">
                                  <Zap size={24} className={`text-gray-400 ${holdProgress > 0 ? 'text-mauvelous' : ''}`} />
                              </div>
                         </button>
@@ -627,8 +617,8 @@ export default function App() {
                     <span>SIGN OUT</span>
                 </button>
                 <div className="mt-4 text-[9px] text-gray-300 text-center font-bold uppercase tracking-wider leading-relaxed">
-                 Project by <br/> 
-                 <span className="text-gray-400">Anoushay, Zainab, Aima, Abeera</span>
+                 . <br/> 
+                 <span className="text-gray-400">.</span>
                 </div>
             </div>
           </aside>
